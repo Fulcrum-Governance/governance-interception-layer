@@ -1844,6 +1844,80 @@ func TestEmptyToolNamesInScopeFiltering(t *testing.T) {
 	}
 }
 
+// TestStopOnDeny_ActuallyStops verifies that when stopOnDeny is true and the
+// first policy denies, subsequent policies are NOT evaluated. This is the
+// regression test for a bug where `break` inside a switch inside the for-loop
+// only broke the switch and let the loop continue.
+//
+// After the fix: only the first policy's matched rules appear in the result.
+// Before the fix: both policies' rules would be collected.
+func TestStopOnDeny_ActuallyStops(t *testing.T) {
+	// Two policies, both match-all, both have a distinct rule ID so we can
+	// tell which one(s) were evaluated.
+	denyFirst := newTestPolicy("deny-first", "tenant1", 100, PolicyStatus_POLICY_STATUS_ACTIVE, []*PolicyRule{
+		newTestRule("rule-from-first", true, nil, []*PolicyAction{
+			newDenyAction(false, "first deny"),
+		}),
+	})
+	allowSecond := newTestPolicy("allow-second", "tenant1", 50, PolicyStatus_POLICY_STATUS_ACTIVE, []*PolicyRule{
+		newTestRule("rule-from-second", true, nil, []*PolicyAction{
+			newAllowAction(false),
+		}),
+	})
+
+	e := NewEvaluator([]*Policy{denyFirst, allowSecond}, WithStopOnDeny(true))
+
+	decision, err := e.Evaluate(context.Background(), &EvaluationRequest{
+		TenantID: "tenant1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if decision.Action != ActionDeny {
+		t.Errorf("expected ActionDeny, got %v", decision.Action)
+	}
+
+	// Only the first policy's rule should appear — proves evaluation stopped.
+	if got := len(decision.MatchedRules); got != 1 {
+		t.Fatalf("expected exactly 1 matched rule (stopOnDeny should stop after first deny), got %d: %+v", got, decision.MatchedRules)
+	}
+	if decision.MatchedRules[0].RuleID != "rule-from-first" {
+		t.Errorf("expected matched rule from first policy, got %q", decision.MatchedRules[0].RuleID)
+	}
+}
+
+// TestStopOnDenyDisabled_EvaluatesAll verifies that when stopOnDeny is false,
+// the loop continues past a deny. This guards against the opposite regression.
+func TestStopOnDenyDisabled_EvaluatesAll(t *testing.T) {
+	denyFirst := newTestPolicy("deny-first", "tenant1", 100, PolicyStatus_POLICY_STATUS_ACTIVE, []*PolicyRule{
+		newTestRule("rule-from-first", true, nil, []*PolicyAction{
+			newDenyAction(false, "first deny"),
+		}),
+	})
+	allowSecond := newTestPolicy("allow-second", "tenant1", 50, PolicyStatus_POLICY_STATUS_ACTIVE, []*PolicyRule{
+		newTestRule("rule-from-second", true, nil, []*PolicyAction{
+			newAllowAction(false),
+		}),
+	})
+
+	e := NewEvaluator([]*Policy{denyFirst, allowSecond}, WithStopOnDeny(false))
+
+	decision, err := e.Evaluate(context.Background(), &EvaluationRequest{
+		TenantID: "tenant1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if decision.Action != ActionDeny {
+		t.Errorf("expected ActionDeny (deny still wins), got %v", decision.Action)
+	}
+	if got := len(decision.MatchedRules); got != 2 {
+		t.Fatalf("expected 2 matched rules (both policies evaluated), got %d", got)
+	}
+}
+
 // Helper function
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))

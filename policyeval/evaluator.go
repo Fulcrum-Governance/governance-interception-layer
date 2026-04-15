@@ -94,6 +94,7 @@ func (e *Evaluator) Evaluate(ctx context.Context, req *EvaluationRequest) (*Deci
 	finalAction := ActionAllow
 	var escalationReason string
 
+policyLoop:
 	for _, policy := range policies {
 		// Skip non-active policies
 		if policy.Status != PolicyStatus_POLICY_STATUS_ACTIVE {
@@ -124,7 +125,7 @@ func (e *Evaluator) Evaluate(ctx context.Context, req *EvaluationRequest) (*Deci
 			finalAction = ActionDeny
 			matchedPolicy = policy
 			if e.stopOnDeny {
-				break
+				break policyLoop
 			}
 		case ActionEscalate:
 			if finalAction != ActionDeny {

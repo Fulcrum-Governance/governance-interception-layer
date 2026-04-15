@@ -8,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+
+	"github.com/fulcrum-governance/gil/policyeval"
 )
 
 func TestMiddleware_DenyReturns403WithJSON(t *testing.T) {
@@ -175,6 +177,80 @@ func TestMiddleware_DryRunHeader(t *testing.T) {
 	}
 	if got := rec.Header().Get(HeaderGovernanceAction); got != "allow" {
 		t.Errorf("expected X-Governance-Action=allow under dry-run, got %q", got)
+	}
+}
+
+func TestMiddleware_EscalateDoesNotForward(t *testing.T) {
+	var called atomic.Bool
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called.Store(true)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	ev := policyeval.NewEvaluator([]*policyeval.Policy{
+		newSemanticEscalatePolicy("p-esc"),
+	})
+	p := NewPipeline(PipelineConfig{}, nil, ev, nil)
+	mw := NewMiddleware(p, next, MiddlewareConfig{})
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set("X-Tool-Name", "send_email")
+	rec := httptest.NewRecorder()
+
+	mw.ServeHTTP(rec, req)
+
+	if called.Load() {
+		t.Fatal("downstream handler MUST NOT be called on escalate")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("expected 403 on escalate, got %d", rec.Code)
+	}
+	if got := rec.Header().Get(HeaderGovernanceAction); got != "escalate" {
+		t.Errorf("expected X-Governance-Action=escalate, got %q", got)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["action"] != "escalate" {
+		t.Errorf("expected body action=escalate, got %q", body["action"])
+	}
+}
+
+func TestMiddleware_RequireApprovalDoesNotForward(t *testing.T) {
+	var called atomic.Bool
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called.Store(true)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	ev := policyeval.NewEvaluator([]*policyeval.Policy{
+		newMatchAllPolicy("p-approve", policyeval.PolicyActionType_ACTION_TYPE_REQUIRE_APPROVAL, "needs human"),
+	})
+	p := NewPipeline(PipelineConfig{}, nil, ev, nil)
+	mw := NewMiddleware(p, next, MiddlewareConfig{})
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set("X-Tool-Name", "deploy")
+	rec := httptest.NewRecorder()
+
+	mw.ServeHTTP(rec, req)
+
+	if called.Load() {
+		t.Fatal("downstream handler MUST NOT be called on require_approval")
+	}
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("expected 403 on require_approval, got %d", rec.Code)
+	}
+	if got := rec.Header().Get(HeaderGovernanceAction); got != "require_approval" {
+		t.Errorf("expected X-Governance-Action=require_approval, got %q", got)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["action"] != "require_approval" {
+		t.Errorf("expected body action=require_approval, got %q", body["action"])
 	}
 }
 

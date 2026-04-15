@@ -93,11 +93,11 @@ func (m *GovernanceMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	writeGovernanceHeaders(w, decision)
 
-	if decision.Action == "deny" {
+	if !decision.Allowed() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
 		_ = json.NewEncoder(w).Encode(map[string]string{
-			"action":     "deny",
+			"action":     decision.Action,
 			"reason":     decision.Reason,
 			"request_id": decision.RequestID,
 		})

@@ -1,0 +1,45 @@
+version: "2"
+run:
+  modules-download-mode: readonly
+linters:
+  enable:
+    - gocritic
+    - misspell
+  disable:
+    - exhaustive
+    - wrapcheck
+  settings:
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - dupImport
+        - ifElseChain
+        - nestingReduce
+        - truncateCmp
+        - underef
+        - unnamedResult
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gocritic
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

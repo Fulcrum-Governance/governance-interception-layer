@@ -1,0 +1,30 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test / coverage output
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Editor / OS cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local tooling
+/bin/
+/dist/
+
+# Compiled example binaries (keep source, ignore build output).
+/examples/simple/simple
+/examples/mcp-proxy/mcp-proxy
+/examples/custom-interceptor/custom-interceptor
+/examples/redis-trust/redis-trust
+/examples/http-middleware/http-middleware
+/examples/rate-limit/rate-limit

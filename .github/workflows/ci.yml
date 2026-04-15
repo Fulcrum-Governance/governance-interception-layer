@@ -68,6 +68,8 @@ jobs:
         with:
           args: ./...
       - name: govulncheck
+        env:
+          GOTOOLCHAIN: go1.26.2
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...

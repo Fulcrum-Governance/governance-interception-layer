@@ -2,8 +2,6 @@ module github.com/fulcrum-governance/gil/adapters/grpc
 
 go 1.23
 
-toolchain go1.26.2
-
 replace github.com/fulcrum-governance/gil => ../../
 
 require (

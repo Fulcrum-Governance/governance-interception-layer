@@ -154,6 +154,11 @@ func (p *Pipeline) Evaluate(ctx context.Context, req *GovernanceRequest) (*Gover
 		Action:     "allow",
 		TrustScore: 1.0,
 		EnvelopeID: req.EnvelopeID,
+		// Deterministic is the correct label for every GIL pipeline outcome
+		// except PolicyEval ActionEscalate (which flips to classified below).
+		// The PRD-002 taxonomy reserves "proved" and "human_approved" for
+		// upstream Foundry decisions that never originate here.
+		DecisionMode: DecisionModeDeterministic,
 	}
 
 	defer func() {
@@ -243,6 +248,11 @@ func (p *Pipeline) Evaluate(ctx context.Context, req *GovernanceRequest) (*Gover
 		case policyeval.ActionEscalate:
 			decision.Action = "escalate"
 			decision.Reason = evalDecision.EscalationReason
+			// Escalation implies a semantic condition the evaluator could not
+			// resolve deterministically (see pipeline_coverage_test.go
+			// newSemanticEscalatePolicy). Relabel the decision so downstream
+			// sinks know this row needs semantic follow-up.
+			decision.DecisionMode = DecisionModeClassified
 		case policyeval.ActionRequireApproval:
 			decision.Action = "require_approval"
 			decision.Reason = evalDecision.Reason

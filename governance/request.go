@@ -82,6 +82,10 @@ type GovernanceDecision struct {
 	DryRun       bool          `json:"dry_run"`
 	CostEstimate float64       `json:"cost_estimate,omitempty"`
 	Duration     time.Duration `json:"duration"`
+	// DecisionMode labels the epistemic confidence level of this decision:
+	// deterministic, classified, proved, or human_approved. Empty string
+	// means the producer did not label the mode (backwards compat).
+	DecisionMode DecisionMode `json:"decision_mode,omitempty"`
 }
 
 // Allowed returns true if the decision permits execution.

@@ -19,6 +19,9 @@ type AuditEvent struct {
 	TenantID   string                 `json:"tenant_id,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 	Timestamp  time.Time              `json:"timestamp"`
+	// DecisionMode mirrors GovernanceDecision.DecisionMode so audit sinks
+	// can filter or aggregate by epistemic confidence level.
+	DecisionMode DecisionMode `json:"decision_mode,omitempty"`
 }
 
 // AuditPublisher publishes governance audit events.

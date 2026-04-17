@@ -260,15 +260,16 @@ func (p *Pipeline) Evaluate(ctx context.Context, req *GovernanceRequest) (*Gover
 
 func (p *Pipeline) emitAudit(ctx context.Context, req *GovernanceRequest, decision *GovernanceDecision) {
 	p.auditor.Publish(ctx, AuditEvent{
-		RequestID:  req.RequestID,
-		Transport:  req.Transport,
-		ToolName:   req.ToolName,
-		Action:     decision.Action,
-		Reason:     decision.Reason,
-		TrustScore: decision.TrustScore,
-		EnvelopeID: decision.EnvelopeID,
-		AgentID:    req.AgentID,
-		TenantID:   req.TenantID,
-		Timestamp:  time.Now(),
+		RequestID:    req.RequestID,
+		Transport:    req.Transport,
+		ToolName:     req.ToolName,
+		Action:       decision.Action,
+		Reason:       decision.Reason,
+		TrustScore:   decision.TrustScore,
+		EnvelopeID:   decision.EnvelopeID,
+		AgentID:      req.AgentID,
+		TenantID:     req.TenantID,
+		Timestamp:    time.Now(),
+		DecisionMode: decision.DecisionMode,
 	})
 }

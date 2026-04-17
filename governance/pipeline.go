@@ -50,6 +50,19 @@ type PipelineConfig struct {
 	DryRun bool
 }
 
+// PolicyEvaluator is the abstract dependency the pipeline has on the policy
+// evaluation engine. The concrete *policyeval.Evaluator in this repo
+// satisfies it; tests and alternate implementations can substitute any type
+// with the same method.
+//
+// Keeping this as an interface (rather than a concrete type) is what makes
+// the fail-closed-vs-fail-open branch in Evaluate reachable from tests — a
+// stub evaluator can return a synthetic error that the stock evaluator
+// cannot produce.
+type PolicyEvaluator interface {
+	Evaluate(ctx context.Context, req *policyeval.EvaluationRequest) (*policyeval.Decision, error)
+}
+
 // Pipeline evaluates governance requests against trust state, static policies,
 // domain interceptors, and the portable policy evaluator.
 //
@@ -57,7 +70,7 @@ type PipelineConfig struct {
 type Pipeline struct {
 	trustChecker   TrustChecker
 	interceptors   *InterceptorRegistry
-	evaluator      *policyeval.Evaluator
+	evaluator      PolicyEvaluator
 	auditor        AuditPublisher
 	staticPolicies []StaticPolicyRule
 	failClosed     map[TransportType]bool
@@ -66,7 +79,7 @@ type Pipeline struct {
 
 // NewPipeline creates a governance pipeline.
 // All parameters are optional — pass nil for components that are not available.
-func NewPipeline(cfg PipelineConfig, trust TrustChecker, evaluator *policyeval.Evaluator, auditor AuditPublisher) *Pipeline {
+func NewPipeline(cfg PipelineConfig, trust TrustChecker, evaluator PolicyEvaluator, auditor AuditPublisher) *Pipeline {
 	if auditor == nil {
 		auditor = noopAuditPublisher{}
 	}

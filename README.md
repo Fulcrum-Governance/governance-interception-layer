@@ -1,6 +1,6 @@
 # Governance Interception Layer (GIL)
 
-> Protocol-agnostic pre-execution enforcement for AI agent tool calls.
+> The out-of-process enforcement boundary of the Fulcrum governance kernel. Protocol-agnostic pre-execution control for AI agent tool calls.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/fulcrum-governance/gil.svg)](https://pkg.go.dev/github.com/fulcrum-governance/gil)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fulcrum-governance/gil)](https://goreportcard.com/report/github.com/fulcrum-governance/gil)
@@ -8,14 +8,7 @@
 
 ## What is GIL?
 
-GIL is a Go library that evaluates agent tool calls against trust state, static
-policies, domain interceptors, and a portable policy engine — before those
-calls are forwarded to the underlying tool. It runs out-of-process as part of
-an MCP proxy, CLI wrapper, or code-execution gateway, so the governed agent
-cannot bypass or disable it. GIL is the open-source enforcement core extracted
-from [Fulcrum](https://fulcrumlayer.io); it handles the decision path and
-leaves intelligence (semantic analysis, Bayesian trust scoring, cost modelling)
-to the commercial platform.
+GIL is the out-of-process enforcement boundary of the Fulcrum governance kernel — a portable, typed, pre-execution control plane that sits between intent and action. As a Go library, GIL evaluates agent tool calls against trust state, static policies, domain interceptors, and a portable policy engine — before those calls are forwarded to the underlying tool. It runs out-of-process as part of an MCP proxy, CLI wrapper, or code-execution gateway, so the governed agent cannot bypass or disable it. GIL is the open-source enforcement core of [Fulcrum](https://fulcrumlayer.io); it handles the decision path and leaves intelligence (semantic analysis, Bayesian trust scoring, cost modelling) to the commercial kernel surface.
 
 ## Architecture
 
@@ -243,12 +236,18 @@ point:
 
 Full signatures live in [`governance/`](./governance/).
 
-## Part of the Fulcrum Ecosystem
+## Part of the Fulcrum Governance Kernel
 
-GIL is the open-source enforcement layer. The full Fulcrum platform adds
-Lean 4 formal verification for policy invariants, Bayesian trust scoring with
-Beta distributions, per-tenant cost modelling, multi-agent workflow
-orchestration, and managed multi-tenant infrastructure.
+GIL is one of four repositories that make up the Fulcrum governance kernel:
+
+| Repo | Role | License |
+|------|------|---------|
+| [`fulcrum-io`](https://fulcrumlayer.io) | Runtime control plane: policy engine, envelope, foundry, MCP proxy, dashboard | BSL 1.1 |
+| **`governance-interception-layer`** (this repo) | Out-of-process enforcement boundary: transport adapters, 4-stage pipeline | Apache 2.0 |
+| [`fulcrum-trust`](https://github.com/Fulcrum-Governance/fulcrum-trust) | Trust engine: Beta(α,β) evaluator, circuit breaker, LangGraph adapter | Apache 2.0 |
+| `Fulcrum-Proofs` | Formal core: Lean 4 proofs, claim ledger, theorem inventory | Private |
+
+GIL is the open-source enforcement layer. The full kernel adds Lean 4 formal verification for policy invariants, Bayesian trust scoring with Beta distributions, per-tenant cost modelling, multi-agent workflow orchestration, and managed multi-tenant infrastructure.
 
 - Website: [fulcrumlayer.io](https://fulcrumlayer.io)
 - Published: *Formal Trust and Safety Guarantees for Autonomous Multi-Agent

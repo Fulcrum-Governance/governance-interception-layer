@@ -58,18 +58,18 @@ func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.Governan
 	case json.RawMessage:
 		msg = &TaskMessage{}
 		if err := json.Unmarshal(v, msg); err != nil {
-			return nil, fmt.Errorf("unmarshal A2A task message: %w", err)
+			return nil, governance.NewParseError(governance.TransportA2A, "unmarshal task message", err)
 		}
 	case []byte:
 		msg = &TaskMessage{}
 		if err := json.Unmarshal(v, msg); err != nil {
-			return nil, fmt.Errorf("unmarshal A2A task message: %w", err)
+			return nil, governance.NewParseError(governance.TransportA2A, "unmarshal task message", err)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported raw type %T for A2A adapter", raw)
+		return nil, governance.NewParseError(governance.TransportA2A, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 	if msg == nil || msg.Action == "" {
-		return nil, fmt.Errorf("A2A TaskMessage.Action is required")
+		return nil, governance.NewParseError(governance.TransportA2A, "TaskMessage.Action is required", nil)
 	}
 
 	traceID := msg.TaskID

@@ -52,15 +52,15 @@ func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.Governan
 	case json.RawMessage:
 		input = &ToolCallInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal MCP tool call: %w", err)
+			return nil, governance.NewParseError(governance.TransportMCP, "unmarshal tool call", err)
 		}
 	case []byte:
 		input = &ToolCallInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal MCP tool call: %w", err)
+			return nil, governance.NewParseError(governance.TransportMCP, "unmarshal tool call", err)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported raw type %T for MCP adapter", raw)
+		return nil, governance.NewParseError(governance.TransportMCP, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 
 	tenantID := input.TenantID

@@ -60,25 +60,25 @@ func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.Governan
 	case json.RawMessage:
 		input = &CommandInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal CLI command input: %w", err)
+			return nil, governance.NewParseError(governance.TransportCLI, "unmarshal command input", err)
 		}
 	case []byte:
 		input = &CommandInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal CLI command input: %w", err)
+			return nil, governance.NewParseError(governance.TransportCLI, "unmarshal command input", err)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported raw type %T for CLI adapter", raw)
+		return nil, governance.NewParseError(governance.TransportCLI, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 
 	if input.Command == "" {
-		return nil, fmt.Errorf("parse CLI request: empty command")
+		return nil, governance.NewParseError(governance.TransportCLI, "empty command", nil)
 	}
 
 	// Parse the command into pipe segments.
 	segments, err := ParseCommand(input.Command)
 	if err != nil {
-		return nil, fmt.Errorf("parse CLI request: %w", err)
+		return nil, governance.NewParseError(governance.TransportCLI, "parse command", err)
 	}
 
 	// Classify each segment's risk level.

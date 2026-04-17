@@ -59,10 +59,10 @@ func (a *Adapter) Type() governance.TransportType { return governance.TransportG
 func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.GovernanceRequest, error) {
 	info, ok := raw.(*CallInfo)
 	if !ok {
-		return nil, fmt.Errorf("unsupported raw type %T for gRPC adapter", raw)
+		return nil, governance.NewParseError(governance.TransportGRPC, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 	if info.Method == "" {
-		return nil, fmt.Errorf("gRPC CallInfo.Method is required")
+		return nil, governance.NewParseError(governance.TransportGRPC, "CallInfo.Method is required", nil)
 	}
 
 	agentID := info.AgentID

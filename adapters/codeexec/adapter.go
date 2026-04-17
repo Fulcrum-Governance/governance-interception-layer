@@ -60,22 +60,22 @@ func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.Governan
 	case json.RawMessage:
 		input = &CodeExecInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal code-exec input: %w", err)
+			return nil, governance.NewParseError(governance.TransportCodeExec, "unmarshal input", err)
 		}
 	case []byte:
 		input = &CodeExecInput{}
 		if err := json.Unmarshal(v, input); err != nil {
-			return nil, fmt.Errorf("unmarshal code-exec input: %w", err)
+			return nil, governance.NewParseError(governance.TransportCodeExec, "unmarshal input", err)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported raw type %T for code-exec adapter", raw)
+		return nil, governance.NewParseError(governance.TransportCodeExec, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 
 	if input.Code == "" {
-		return nil, fmt.Errorf("code-exec input: code field is required")
+		return nil, governance.NewParseError(governance.TransportCodeExec, "code field is required", nil)
 	}
 	if input.Language == "" {
-		return nil, fmt.Errorf("code-exec input: language field is required")
+		return nil, governance.NewParseError(governance.TransportCodeExec, "language field is required", nil)
 	}
 
 	tenantID := input.TenantID

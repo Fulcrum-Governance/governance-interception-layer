@@ -52,31 +52,31 @@ func (a *Adapter) ParseRequest(_ context.Context, raw any) (*governance.Governan
 	case json.RawMessage:
 		payload = &WebhookPayload{}
 		if err := json.Unmarshal(v, payload); err != nil {
-			return nil, fmt.Errorf("unmarshal webhook payload: %w", err)
+			return nil, governance.NewParseError(governance.TransportWebhook, "unmarshal payload", err)
 		}
 	case []byte:
 		payload = &WebhookPayload{}
 		if err := json.Unmarshal(v, payload); err != nil {
-			return nil, fmt.Errorf("unmarshal webhook payload: %w", err)
+			return nil, governance.NewParseError(governance.TransportWebhook, "unmarshal payload", err)
 		}
 	case *http.Request:
 		body, err := io.ReadAll(v.Body)
 		if err != nil {
-			return nil, fmt.Errorf("read webhook request body: %w", err)
+			return nil, governance.NewParseError(governance.TransportWebhook, "read request body", err)
 		}
 		_ = v.Body.Close()
 		// Restore body for downstream consumers.
 		v.Body = io.NopCloser(bytes.NewReader(body))
 		payload = &WebhookPayload{}
 		if err := json.Unmarshal(body, payload); err != nil {
-			return nil, fmt.Errorf("unmarshal webhook request body: %w", err)
+			return nil, governance.NewParseError(governance.TransportWebhook, "unmarshal request body", err)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported raw type %T for webhook adapter", raw)
+		return nil, governance.NewParseError(governance.TransportWebhook, fmt.Sprintf("unsupported raw type %T", raw), nil)
 	}
 
 	if payload.Tool == "" {
-		return nil, fmt.Errorf("webhook payload requires \"tool\"")
+		return nil, governance.NewParseError(governance.TransportWebhook, "tool field is required", nil)
 	}
 	tenantID := payload.TenantID
 	if tenantID == "" {

@@ -199,6 +199,9 @@ Either is a code change, not documentation. Logged here rather than acted on.
 
 ## 6. Known Gaps and Recommendations
 
+Four of the five gaps originally recorded here were remediated in PRD-004R.
+Status is annotated inline. The A2A gap remains open.
+
 - **A2A adapter is stub-level.** `adapters/a2a/adapter.go:1-6` declares the
   protocol "still evolving"; `ForwardGoverned`, `InspectResponse`, and
   `EmitGovernanceMetadata` are all no-ops (`:89-102`). The adapter parses
@@ -208,33 +211,40 @@ Either is a code change, not documentation. Logged here rather than acted on.
   production-tested. Treat A2A cells as "intended behavior" until the
   adapter matures.
 
-- **Adapter-level parse failure is not uniformly surfaced.** The matrix shows
-  three distinct behaviors: HTTP 400 (webhook), `codes.Internal` (gRPC via
-  the provided interceptor), and "error returned to caller" for MCP/CLI/
-  CodeExec/A2A. The last group depends on the embedding runtime to map the
-  error to a protocol response. If a runtime silently drops the error, the
-  request could fail open at the runtime layer even though the GIL behavior
-  is correct. Recommendation: add `ErrorHandler` hooks or a shared
-  "adapter-error-to-decision" helper so every runtime emits an audit event
-  and a deterministic caller-visible response on parse failure.
+- **[RESOLVED in PRD-004R Phase 4] Adapter-level parse failure is now typed.**
+  Every adapter's `ParseRequest` returns `*governance.ParseError` on
+  failure (`governance/errors.go`). Callers use `errors.As` or the
+  convenience helper `governance.IsParseError(err)` to detect parse
+  failures and route them through whatever deny-equivalent behavior their
+  runtime wants. The underlying cause is preserved via `Unwrap`.
+  Protocol-specific surface (HTTP 400 for webhook, `codes.Internal` for
+  gRPC) still differs by design — the three-way split documented in §2 is
+  correct for those transports — but MCP/CLI/CodeExec/A2A callers can now
+  handle parse failures uniformly via the typed error, instead of
+  string-matching adapter-specific messages.
 
-- **`FailClosedTransports` default is empty.** `pipeline.go:19-21` ships with
-  `nil`, meaning PolicyEval errors are silently allowed on every transport
-  until operators opt in. The defaults recommended in §3 should become the
-  shipped default in a subsequent PR. This is a one-line config change but
-  is out of scope for this documentation PRD.
+- **[RESOLVED in PRD-004R Phase 1] `FailClosedTransports` default is no
+  longer empty.** The kernel ships with `DefaultFailClosedTransports =
+  [MCP, CodeExec, gRPC]`, applied when
+  `PipelineConfig.FailClosedTransports == nil`. Operators who need
+  fail-open everywhere must pass an explicit (non-nil) empty slice.
+  See `governance/pipeline.go`.
 
-- **PolicyEval error path is currently unreachable through the public
-  evaluator.** See the FI-025–FI-031 blocker note in §5. This means the
-  fail-closed-vs-fail-open branch is deliberate and readable but not
-  behaviorally covered by tests. Prioritize a test-only evaluator seam so
-  the behavior can be verified end-to-end.
+- **[RESOLVED in PRD-004R Phase 2] PolicyEval error path is now reachable.**
+  The pipeline now depends on a `PolicyEvaluator` interface rather than
+  the concrete `*policyeval.Evaluator`. Tests inject an `errorEvaluator`
+  stub that returns a synthetic error, which drives both the fail-closed
+  (`TestPipeline_EvaluatorError_FailClosedTransport_Denies`) and fail-open
+  (`TestPipeline_EvaluatorError_FailOpenTransport_Allows`) branches.
+  FI-025 through FI-031 in §5 are now executable.
 
-- **DryRun is under-tested.** The rewrite logic at
-  `governance/pipeline.go:121-129` has no dedicated test today.
-  `TestPipeline_AuditEventEmitted` (`governance/pipeline_test.go:237-269`)
-  exercises audit emission but not the dry-run action rewrite. FI-034
-  covers this gap.
+- **[RESOLVED in PRD-004R Phase 3] DryRun has dedicated coverage.** Four
+  new tests in `governance/pipeline_dryrun_test.go` exercise the rewrite
+  branch, including the security-critical audit-preservation invariant
+  (`TestPipeline_DryRun_AuditPreservesOriginalDeny`) and the cross-cut
+  with the Phase 2 evaluator seam
+  (`TestPipeline_DryRun_FailClosedEvaluatorError_Rewritten`). FI-034 is now
+  covered.
 
 ---
 

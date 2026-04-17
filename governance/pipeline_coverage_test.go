@@ -163,10 +163,9 @@ func TestPipeline_InterceptorEmptyAction_DefaultsDeny(t *testing.T) {
 
 func TestPipeline_FailClosedTransports_BuildsMap(t *testing.T) {
 	// Configure a pipeline with FailClosedTransports populated to exercise
-	// the map-building loop in NewPipeline. Behavioral effects of fail-closed
-	// on Evaluator errors are unreachable because *policyeval.Evaluator never
-	// returns an error for non-nil requests; we just verify the pipeline
-	// evaluates a normal request successfully when the map is populated.
+	// the map-building loop in NewPipeline. An explicit non-nil list must
+	// suppress DefaultFailClosedTransports so only listed transports are
+	// marked fail-closed.
 	cfg := PipelineConfig{
 		FailClosedTransports: []TransportType{TransportMCP, TransportCodeExec},
 	}
@@ -180,6 +179,9 @@ func TestPipeline_FailClosedTransports_BuildsMap(t *testing.T) {
 	if p.failClosed[TransportCLI] {
 		t.Error("expected TransportCLI to NOT be marked fail-closed")
 	}
+	if p.failClosed[TransportGRPC] {
+		t.Error("explicit list must suppress default: TransportGRPC should not be fail-closed")
+	}
 
 	req := &GovernanceRequest{ToolName: "read_file", Transport: TransportMCP, TenantID: "t1"}
 	d, err := p.Evaluate(context.Background(), req)
@@ -188,6 +190,66 @@ func TestPipeline_FailClosedTransports_BuildsMap(t *testing.T) {
 	}
 	if d.Action != "allow" {
 		t.Errorf("expected allow-by-default even with fail-closed config, got %s", d.Action)
+	}
+}
+
+// TestPipeline_FailClosedTransports_NilAppliesDefault verifies that a nil
+// FailClosedTransports slice triggers DefaultFailClosedTransports — the
+// kernel's security-critical transports (MCP, CodeExec, gRPC) are fail-closed
+// out of the box, and the informational transports (CLI, A2A, Webhook) are
+// not. Operators who want different defaults must set the field explicitly.
+func TestPipeline_FailClosedTransports_NilAppliesDefault(t *testing.T) {
+	p := NewPipeline(PipelineConfig{}, nil, nil, nil) // nil FailClosedTransports
+
+	// Security-critical transports must be fail-closed by default.
+	for _, tr := range []TransportType{TransportMCP, TransportCodeExec, TransportGRPC} {
+		if !p.failClosed[tr] {
+			t.Errorf("expected %s to default to fail-closed", tr)
+		}
+	}
+
+	// Informational transports must NOT be fail-closed by default.
+	for _, tr := range []TransportType{TransportCLI, TransportA2A, TransportWebhook} {
+		if p.failClosed[tr] {
+			t.Errorf("expected %s NOT to default to fail-closed", tr)
+		}
+	}
+}
+
+// TestPipeline_FailClosedTransports_ExplicitEmptySliceIsFailOpen preserves the
+// operator escape hatch: passing an explicit (non-nil) empty slice means
+// "I know what I'm doing — fail-open every transport". Only a nil field
+// triggers the security-conscious defaults.
+func TestPipeline_FailClosedTransports_ExplicitEmptySliceIsFailOpen(t *testing.T) {
+	cfg := PipelineConfig{FailClosedTransports: []TransportType{}} // explicit empty, NOT nil
+	p := NewPipeline(cfg, nil, nil, nil)
+
+	for _, tr := range []TransportType{
+		TransportMCP, TransportCodeExec, TransportGRPC,
+		TransportCLI, TransportA2A, TransportWebhook,
+	} {
+		if p.failClosed[tr] {
+			t.Errorf("explicit empty slice must fail-open every transport; %s was fail-closed", tr)
+		}
+	}
+}
+
+// TestPipeline_DefaultFailClosedTransports_ExportedValue pins the exported
+// default list so downstream callers can reason about what the kernel ships
+// with. If this test ever changes, update FAIL_MODE_MATRIX.md §3.
+func TestPipeline_DefaultFailClosedTransports_ExportedValue(t *testing.T) {
+	want := map[TransportType]bool{
+		TransportMCP:      true,
+		TransportCodeExec: true,
+		TransportGRPC:     true,
+	}
+	if len(DefaultFailClosedTransports) != len(want) {
+		t.Fatalf("expected %d defaults, got %d: %v", len(want), len(DefaultFailClosedTransports), DefaultFailClosedTransports)
+	}
+	for _, tr := range DefaultFailClosedTransports {
+		if !want[tr] {
+			t.Errorf("unexpected transport in DefaultFailClosedTransports: %s", tr)
+		}
 	}
 }
 

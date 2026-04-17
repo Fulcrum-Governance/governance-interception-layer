@@ -11,6 +11,23 @@ import (
 	"github.com/fulcrum-governance/gil/policyeval"
 )
 
+// DefaultFailClosedTransports enumerates the transports that fail-closed on
+// PolicyEval errors out of the box. These are the transports where silently
+// allowing an ungoverned action has real security consequences:
+//
+//   - TransportMCP — model-facing tool surface; the primary governance wedge.
+//   - TransportCodeExec — arbitrary code execution.
+//   - TransportGRPC — internal service surface for control-plane calls.
+//
+// Operators who want different defaults must set
+// PipelineConfig.FailClosedTransports explicitly. An explicit (non-nil) empty
+// slice opts out of every transport being fail-closed.
+var DefaultFailClosedTransports = []TransportType{
+	TransportMCP,
+	TransportCodeExec,
+	TransportGRPC,
+}
+
 // PipelineConfig holds configuration for the governance pipeline.
 type PipelineConfig struct {
 	// StaticPolicies are simple allow/deny rules evaluated before the full engine.
@@ -18,6 +35,11 @@ type PipelineConfig struct {
 
 	// FailClosedTransports are transports that deny on pipeline errors.
 	// All other transports fail-open on pipeline errors.
+	//
+	// Semantics:
+	//   - nil (field unset) → DefaultFailClosedTransports is applied.
+	//   - non-nil empty slice → all transports fail-open (operator opt-out).
+	//   - non-nil populated slice → only the listed transports fail-closed.
 	FailClosedTransports []TransportType
 
 	// DryRun enables audit-only mode. When true, any decision that would
@@ -52,8 +74,14 @@ func NewPipeline(cfg PipelineConfig, trust TrustChecker, evaluator *policyeval.E
 		evaluator = policyeval.NewEvaluator(nil)
 	}
 
-	fc := make(map[TransportType]bool)
-	for _, t := range cfg.FailClosedTransports {
+	// nil FailClosedTransports → apply the kernel's secure-by-default list.
+	// Non-nil (including explicit empty slice) is taken verbatim.
+	failClosedList := cfg.FailClosedTransports
+	if failClosedList == nil {
+		failClosedList = DefaultFailClosedTransports
+	}
+	fc := make(map[TransportType]bool, len(failClosedList))
+	for _, t := range failClosedList {
 		fc[t] = true
 	}
 

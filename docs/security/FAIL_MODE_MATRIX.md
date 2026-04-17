@@ -26,6 +26,24 @@ audit event via a deferred hook (`pipeline.go:118-130`). The staging is:
 | 3 | Domain Interceptors | `pipeline.go:167-181` | **Always fail-closed.** Interceptor returns an error → deny with reason `interceptor error: %v` (`pipeline.go:169-173`). Interceptor returns `{Allowed: false}` uses its own action/reason; empty action defaults to `deny` (`pipeline.go:174-181`). |
 | 4 | PolicyEval | `pipeline.go:183-215` | **Per-transport configurable.** Evaluator error → deny only if `req.Transport` is in `PipelineConfig.FailClosedTransports` (`pipeline.go:189-193`). Otherwise the error is swallowed and the pre-existing `allow` default is returned (`pipeline.go:194-195`). |
 
+Every decision emitted by `Pipeline.Evaluate` now carries an explicit
+`decision_mode` label (see `governance/decision_mode.go`, PRD-002). The
+four modes are mutually exclusive:
+
+| Mode | Who sets it | When |
+|---|---|---|
+| `deterministic` | GIL pipeline | Default for every stage below; static-rule matches, trust outcomes, interceptor outcomes, `ActionDeny`/`ActionWarn`/`ActionRequireApproval`, evaluator errors (fail-closed or fail-open), and the no-match default allow. |
+| `classified` | GIL pipeline | Only PolicyEval `ActionEscalate`, because escalation implies a semantic condition the evaluator could not resolve deterministically. |
+| `proved` | Upstream Foundry (fulcrum-io) | Set when a Lean 4 invariant has discharged the decision. GIL itself never emits this mode. |
+| `human_approved` | Upstream Foundry (fulcrum-io) | Set when a human reviewer has approved the action. GIL itself never emits this mode. |
+
+Per-stage citations: the default value is initialized where `decision` is
+constructed (`governance/pipeline.go:161`); the single `classified` override
+is in the `ActionEscalate` branch of Stage 4
+(`governance/pipeline.go:255`). The decision-mode field is propagated to
+the audit event by `emitAudit` (`governance/pipeline.go:283`), so audit
+sinks can aggregate or filter by epistemic confidence level.
+
 The defer-emit hook at `pipeline.go:118-130` is the only place a decision can
 be reshaped:
 

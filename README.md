@@ -91,7 +91,7 @@ deny — destructive
 | CLI | `adapters/cli` | Shell commands including pipe chains, with a risk classifier |
 | Code exec | `adapters/codeexec` | Python and JavaScript source submitted to a sandbox, with obfuscation analysis |
 | gRPC | `adapters/grpc` | gRPC unary calls via a server interceptor (separate module) |
-| A2A | `adapters/a2a` | Google Agent-to-Agent protocol task messages |
+| A2A *(experimental)* | `adapters/a2a` | Google Agent-to-Agent protocol task messages — adapter governs the decision only; `ForwardGoverned`, `InspectResponse`, and `EmitGovernanceMetadata` are no-ops in the current implementation, so the full transport lifecycle is not yet at parity with MCP/CLI/CodeExec |
 | Webhook | `adapters/webhook` | HTTP webhook tool-call payloads |
 
 Each adapter implements the `governance.TransportAdapter` interface. Adding a

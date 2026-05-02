@@ -187,8 +187,10 @@ policyeval.WithStopOnDeny(true)
 
 ## Performance
 
-- Target: <10ms P99 evaluation time
-- Typical: <1ms for simple policies
+- Design target: <10ms P99 evaluation time (unmeasured — no in-tree
+  benchmark; `WithMaxEvaluationTime` enforces a timeout cutoff but does
+  not itself benchmark evaluation latency)
+- Design goal: <1ms for simple policies
 - Regex caching reduces repeated pattern compilation
 - Policy sorting by priority enables early termination
 
@@ -201,7 +203,8 @@ go test ./policyeval/... -v
 # With coverage
 go test ./policyeval/... -cover
 
-# Current coverage: 97.4%
+# Coverage floor enforced in CI per CONTRIBUTING.md (policyeval >=88%);
+# re-run locally to print the current value.
 ```
 
 ## Dependencies

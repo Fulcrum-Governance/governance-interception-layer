@@ -22,7 +22,7 @@ func TestDecisionMode_Valid(t *testing.T) {
 func TestDecisionMode_Invalid(t *testing.T) {
 	invalid := []DecisionMode{
 		"",
-		"governed",  // the retired generic term
+		"governed", // the retired generic term
 		"unknown",
 		"Deterministic", // case-sensitive: capital D must not match
 		"probable",

@@ -117,7 +117,7 @@ empty default.
 | Transport | Recommended | Rationale |
 |---|---|---|
 | `TransportMCP` | **fail-closed** | Model-facing tool surface; silently allowing on evaluator outage means the governance layer degrades to the pre-GIL state for agent tool calls. This is the single most security-critical row in the matrix. |
-| `TransportCodeExec` | **fail-closed** | Arbitrary code execution. A PolicyEval outage that allows-by-default here sidesteps the 21 Python + 9 JavaScript obfuscation analyzers (`adapters/codeexec/analyzer_python.go`, `analyzer_javascript.go`). |
+| `TransportCodeExec` | **fail-closed** | Arbitrary code execution. A PolicyEval outage that allows-by-default here sidesteps the 21 Python + 9 JavaScript obfuscation detection categories — currently 57 + 36 compiled regex patterns (`adapters/codeexec/analyzer_python.go`, `analyzer_javascript.go`). |
 | `TransportCLI` | **fail-closed** | Command execution with parsed pipe-chain risk classification (`adapters/cli/classifier.go`). Silently allowing on evaluator outage drops the high-risk classification results. |
 | `TransportGRPC` | fail-closed | Unary RPC interceptor (`adapters/grpc/adapter.go:131-157`). Internal service surface; defaulting to fail-closed matches the rest of the control plane's default posture. |
 | `TransportA2A` | fail-closed (with caveat) | A2A adapter is stub-level (see §6). If A2A is used in production at all, it should fail-closed until the adapter matures. |

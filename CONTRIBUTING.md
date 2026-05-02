@@ -37,7 +37,7 @@ is needed to diagnose every report.
    ```
 5. Open a PR against `main`. Describe what changed and why. Link the issue
    if one exists.
-6. CI will run on Go 1.22 and 1.23. A green CI is required for review.
+6. CI will run on Go 1.23 and 1.24 (test matrix), 1.24 (lint and grpc adapter), and 1.26 (security scan). A green CI is required for review.
 
 For larger changes — new adapters, new extension points, changes to
 `governance/` — open an issue first to discuss the shape before writing code.

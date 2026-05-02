@@ -8,7 +8,7 @@
 
 ## What is GIL?
 
-GIL is the out-of-process enforcement boundary of the Fulcrum governance kernel — a portable, typed, pre-execution control plane that sits between intent and action. As a Go library, GIL evaluates agent tool calls against trust state, static policies, domain interceptors, and a portable policy engine — before those calls are forwarded to the underlying tool. It runs out-of-process as part of an MCP proxy, CLI wrapper, or code-execution gateway, so the governed agent cannot bypass or disable it. GIL is the open-source enforcement core of [Fulcrum](https://fulcrumlayer.io); it handles the decision path and leaves intelligence (semantic analysis, Bayesian trust scoring, cost modelling) to the commercial kernel surface.
+GIL is the out-of-process enforcement boundary of the Fulcrum governance kernel — a portable, typed, pre-execution control plane that sits between intent and action. As a Go library, GIL evaluates agent tool calls against trust state, static policies, domain interceptors, and a portable policy engine — before those calls are forwarded to the underlying tool. It runs out-of-process as part of an MCP proxy, CLI wrapper, or code-execution gateway, so the governed agent cannot bypass or disable it — provided GIL is the sole route to the tool (i.e., the agent's network and process boundary cannot reach the tool directly). GIL is the open-source enforcement core of [Fulcrum](https://fulcrumlayer.io); it handles the decision path and leaves intelligence (semantic analysis, Bayesian trust scoring, cost modelling) to the commercial kernel surface.
 
 ## Architecture
 
@@ -204,7 +204,7 @@ addresses a related problem. The two projects choose different trade-offs.
 | | GIL | Microsoft AGT |
 |---|---|---|
 | Enforcement topology | Out-of-process proxy or wrapper | In-process library call |
-| Bypassable by the agent | No (agent talks to a different address) | Possible if the agent controls the process |
+| Bypassable by the agent | No, in the out-of-process proxy topology (agent talks to a different address); applies only when GIL is the sole route to the tool | Possible if the agent controls the process |
 | Language | Go | Python |
 | Primary surface | MCP / CLI / code-exec | Python SDK calls |
 | Scope | Pre-execution enforcement of tool calls | End-to-end agent governance framework |

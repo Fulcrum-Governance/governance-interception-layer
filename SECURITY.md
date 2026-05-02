@@ -73,7 +73,8 @@ GIL's root module depends only on:
 - `github.com/stretchr/testify` (test-only)
 
 Transitive dependencies are intentionally minimised. `govulncheck` is run on
-every release and is expected to report zero vulnerabilities in the
+every push and pull request via the `security` job in `.github/workflows/ci.yml`
+(Go 1.26 toolchain) and is expected to report zero vulnerabilities in the
 production dependency set.
 
 ## Disclosure credit

@@ -227,6 +227,10 @@ point:
   converts a protocol-specific payload into a `GovernanceRequest`,
   `ForwardGoverned` relays an allowed request, `InspectResponse` examines
   tool output, `EmitGovernanceMetadata` attaches headers to the response.
+  Per-method requirements, no-op semantics, and integration patterns for
+  cross-repo consumers (fulcrum-io MCP/CLI/code-exec proxies, fulcrum-trust
+  LangGraph adapter) are documented in
+  [docs/ADAPTER_CONTRACT.md](./docs/ADAPTER_CONTRACT.md).
 - **`Interceptor`** — `func(ctx, *GovernanceRequest) (*InterceptorResult, error)`.
   Register one per tool name via `Pipeline.RegisterInterceptor`. Return `nil`
   to decline and continue the pipeline.

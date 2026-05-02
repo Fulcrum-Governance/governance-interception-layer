@@ -31,8 +31,9 @@ type ParseError struct {
 }
 
 // Error formats the parse error. Stable format:
-//   "<transport>: <reason>"           when Err == nil
-//   "<transport>: <reason>: <cause>"  when Err != nil
+//
+//	"<transport>: <reason>"           when Err == nil
+//	"<transport>: <reason>: <cause>"  when Err != nil
 func (e *ParseError) Error() string {
 	if e == nil {
 		return "<nil *ParseError>"

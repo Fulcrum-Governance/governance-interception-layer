@@ -191,29 +191,26 @@ new tests are implemented by this PRD — this is a plan.
 | FI-022 | Interceptor error | gRPC | same with `Transport = TransportGRPC` | DENY | New |
 | FI-023 | Interceptor error | A2A | same with `Transport = TransportA2A` | DENY | New |
 | FI-024 | Interceptor error | Webhook | same with `Transport = TransportWebhook` | DENY | New |
-| FI-025 | PolicyEval error (fail-closed) | MCP | stub evaluator returns error; `FailClosedTransports = [TransportMCP]` | DENY, reason contains `policy evaluation failed (fail-closed)` | **Blocker**: stock `*policyeval.Evaluator` never returns error on non-nil requests (noted in `governance/pipeline_coverage_test.go:167-169`). Requires a test-only evaluator interface seam before the test can be written. |
-| FI-026 | PolicyEval error (fail-closed) | CLI | same as FI-025 with `FailClosedTransports = [TransportCLI]` | DENY | Same blocker as FI-025 |
-| FI-027 | PolicyEval error (fail-closed) | CodeExec | same with `FailClosedTransports = [TransportCodeExec]` | DENY | Same blocker |
-| FI-028 | PolicyEval error (fail-closed) | gRPC | same with `FailClosedTransports = [TransportGRPC]` | DENY | Same blocker |
-| FI-029 | PolicyEval error (fail-closed) | A2A | same with `FailClosedTransports = [TransportA2A]` | DENY | Same blocker |
-| FI-030 | PolicyEval error (fail-closed) | Webhook | same with `FailClosedTransports = [TransportWebhook]` | DENY | Same blocker |
-| FI-031 | PolicyEval error (fail-open) | any | stub evaluator returns error; transport NOT in `FailClosedTransports` | ALLOW (pre-existing default), no reason overwrite | Same blocker as FI-025 |
+| FI-025 | PolicyEval error (fail-closed) | MCP | stub evaluator returns error; `FailClosedTransports = [TransportMCP]` | DENY, reason contains `policy evaluation failed (fail-closed)` | Existing: resolved in PRD-004R Phase 2 — see §6. Covered by `TestPipeline_EvaluatorError_FailClosedTransport_Denies` (`governance/pipeline_evaluator_test.go`). |
+| FI-026 | PolicyEval error (fail-closed) | CLI | same as FI-025 with `FailClosedTransports = [TransportCLI]` | DENY | Existing: resolved in PRD-004R Phase 2 — see §6. Same `TestPipeline_EvaluatorError_FailClosedTransport_Denies` exercises the per-transport behavior. |
+| FI-027 | PolicyEval error (fail-closed) | CodeExec | same with `FailClosedTransports = [TransportCodeExec]` | DENY | Existing: resolved in PRD-004R Phase 2 — see §6. |
+| FI-028 | PolicyEval error (fail-closed) | gRPC | same with `FailClosedTransports = [TransportGRPC]` | DENY | Existing: resolved in PRD-004R Phase 2 — see §6. |
+| FI-029 | PolicyEval error (fail-closed) | A2A | same with `FailClosedTransports = [TransportA2A]` | DENY | Existing: resolved in PRD-004R Phase 2 — see §6. |
+| FI-030 | PolicyEval error (fail-closed) | Webhook | same with `FailClosedTransports = [TransportWebhook]` | DENY | Existing: resolved in PRD-004R Phase 2 — see §6. |
+| FI-031 | PolicyEval error (fail-open) | any | stub evaluator returns error; transport NOT in `FailClosedTransports` | ALLOW (pre-existing default), no reason overwrite | Existing: resolved in PRD-004R Phase 2 — see §6. Covered by `TestPipeline_EvaluatorError_FailOpenTransport_Allows` (`governance/pipeline_evaluator_test.go`). |
 | FI-032 | `FailClosedTransports` map construction | n/a | `PipelineConfig{FailClosedTransports: [MCP, CodeExec]}` | `p.failClosed[MCP] && p.failClosed[CodeExec] && !p.failClosed[CLI]` | Existing: `TestPipeline_FailClosedTransports_BuildsMap` (`governance/pipeline_coverage_test.go:164-192`) |
 | FI-033 | Downstream tool 5xx | any | allow decision, then downstream returns 500 | governance `decision.Action == "allow"` emitted; 5xx bubbles to caller unchanged | New (integration test; pipeline is not in the 5xx path) |
 | FI-034 | DryRun rewrite preserves audit | any | `DryRun = true`; force a deny (blocked trust state); capture auditor events | audit event contains `action == "deny"`; caller sees `action == "allow"`, `DryRun == true`, `Reason` starts with `DRY-RUN would deny:` | New (no dedicated test today; `TestPipeline_AuditEventEmitted` at `governance/pipeline_test.go:237-269` exercises audit emission but not the dry-run branch) |
 
-**Blocker note (FI-025 / FI-031):** the pipeline's fail-closed-vs-fail-open
-branch at `governance/pipeline.go:189-195` is currently unreachable through
-the public `*policyeval.Evaluator` type, because that evaluator does not
-return an error for non-nil requests. Closing FI-025 through FI-031 requires
-one of:
-
-1. A test-only evaluator interface (extract the method signature into an
-   interface the pipeline depends on, and inject a faulting stub in tests).
-2. A genuine failure mode in `*policyeval.Evaluator` (e.g., database-backed
-   policy fetch) that the pipeline can actually encounter.
-
-Either is a code change, not documentation. Logged here rather than acted on.
+**Blocker note (FI-025 / FI-031) — RESOLVED in PRD-004R Phase 2.** The
+fail-closed-vs-fail-open branch at `governance/pipeline.go:189-195` is now
+reachable through the `PolicyEvaluator` interface that the pipeline depends
+on, rather than the concrete `*policyeval.Evaluator` type. Tests inject an
+`errorEvaluator` stub (`governance/pipeline_evaluator_test.go`) which drives
+both the fail-closed branch (`TestPipeline_EvaluatorError_FailClosedTransport_Denies`)
+and the fail-open branch (`TestPipeline_EvaluatorError_FailOpenTransport_Allows`).
+FI-025 through FI-031 in §5 are now executable and covered. Historical
+reasoning (the two original closure options) is preserved in §6.
 
 ## 6. Known Gaps and Recommendations
 

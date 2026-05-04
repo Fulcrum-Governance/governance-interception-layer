@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Documentation
+- Added `CITATION.cff`, `CODE_OF_CONDUCT.md`, and README cross-links so the repo matches the four-repo Fulcrum public-surface standard.
+- Reworded public-facing docs to remove the draft-preprint placeholder and align contact language with `fulcrumlayer.io`.
+
 ### Added
 - `DecisionMode` type with four epistemic levels (`proved` / `deterministic` / `classified` / `human-approved`) attached to every `GovernanceDecision` and `AuditEvent`. Captures **how** a decision was reached, not just the outcome — every governance decision now carries a named mode rather than the generic "governed" label. ([4b2d5eb], [a5a724b], [9d406cb])
 - `ParseError` typed error for uniform adapter failure semantics across MCP, CLI, and code-execution transports. Replaces ad-hoc string errors with a single shared type so downstream callers can branch on parse-vs-evaluate failure. ([1f15ae7])
@@ -17,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - README narrative aligned to the governance-kernel framing — replaces earlier platform / cognitive-platform language. ([b03d7c5])
 
 ### Fixed
-- Three bugs surfaced by an external GStack audit (post-v0.1.0 hardening pass). ([caf5f8a])
+- Three bugs surfaced by an external code audit during the post-v0.1.0 hardening pass. ([caf5f8a])
 - Pipeline now defaults security-critical transports (MCP, code-execution) to fail-closed when policy evaluation errors. Previous behavior allowed for ambiguous fail-open scenarios on transient evaluator errors. ([0314824])
 
 ### Documentation

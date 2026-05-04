@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email: **agent@fulcrumlayer.io**
+Email: **security@fulcrumlayer.io**
 
 Please include:
 

@@ -4,6 +4,8 @@ Thank you for considering a contribution. GIL is a small, focused library,
 and that's intentional — scope changes are welcome but need a concrete use
 case attached.
 
+Project docs: [Security](./SECURITY.md) · [Code of Conduct](./CODE_OF_CONDUCT.md) · [Changelog](./CHANGELOG.md) · [Citation](./CITATION.cff)
+
 ## This project is maintained by a solo developer
 
 Security issues get priority. Response times on other issues may vary. If a
@@ -104,4 +106,4 @@ is required.
 ## Security issues
 
 **Do not open a public issue for security vulnerabilities.** Follow the
-process in [SECURITY.md](./SECURITY.md).
+process in [SECURITY.md](./SECURITY.md) and email `security@fulcrumlayer.io`.

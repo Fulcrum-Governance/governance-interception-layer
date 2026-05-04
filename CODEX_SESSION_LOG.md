@@ -22,6 +22,21 @@
 - Update `README.md` to mirror the four-repo architecture block used across Fulcrum repos.
 - Harmonize `CONTRIBUTING.md`, `SECURITY.md`, and `CHANGELOG.md` wording with the public mirror spec.
 
+### Built
+
+- Added `CITATION.cff` with Apache-2.0 metadata and companion-paper citation note.
+- Added `CODE_OF_CONDUCT.md` using Contributor Covenant v2.1 wording.
+- Updated `README.md` to the shared "Part of the Fulcrum Architecture" layout, including GitHub cross-links to all four repos and public project-doc links.
+- Updated `CONTRIBUTING.md`, `SECURITY.md`, and `CHANGELOG.md` to align email/contact language and public-facing wording with the other Fulcrum repos.
+
+### Verification
+
+- `python3` YAML parse for `CITATION.cff`: pass
+- `env -u GOROOT go test ./... -short -count=1 -timeout 5m`: pass
+- Standard-file check passed for `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `CITATION.cff`, `CODE_OF_CONDUCT.md`, and `CODEX_SESSION_LOG.md`
+- README architecture block verified
+- Public-surface cleanup scan verified no remaining `agent@fulcrumlayer.io`, `arXiv link TBD`, `external GStack audit`, or `Private` proof-license wording in the edited public docs
+
 ### Notes For Next Step
 
 - The blocking failure from the earlier attempt was environmental, not repo-code: this shell inherited `GOROOT=/Users/td/.local/share/mise/installs/go/1.24.1` while `go` resolved to Homebrew `1.26.1`.

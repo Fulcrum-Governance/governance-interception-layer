@@ -240,22 +240,26 @@ point:
 
 Full signatures live in [`governance/`](./governance/).
 
-## Part of the Fulcrum Governance Kernel
+## Part of the Fulcrum Architecture
 
-GIL is one of four repositories that make up the Fulcrum governance kernel:
+Fulcrum is built as four coordinated repositories. This repo provides the
+out-of-process enforcement boundary; the core runtime owns multi-tenant
+orchestration and operator surfaces; the trust engine tracks agent-pair
+reputation; and the formal core publishes machine-checkable proof artifacts.
 
 | Repo | Role | License |
 |------|------|---------|
-| [`fulcrum-io`](https://fulcrumlayer.io) | Runtime control plane: policy engine, envelope, foundry, MCP proxy, dashboard | BSL 1.1 |
+| [`fulcrum-io`](https://github.com/Fulcrum-Governance/fulcrum-io) | Runtime control plane: policy engine, envelope, Foundry, MCP proxy, dashboard | BSL 1.1 |
 | **`governance-interception-layer`** (this repo) | Out-of-process enforcement boundary: transport adapters, 4-stage pipeline | Apache 2.0 |
 | [`fulcrum-trust`](https://github.com/Fulcrum-Governance/fulcrum-trust) | Trust engine: Beta(α,β) evaluator, circuit breaker, LangGraph adapter | Apache 2.0 |
-| `Fulcrum-Proofs` | Formal core: Lean 4 proofs, claim ledger, theorem inventory | Private |
+| [`Fulcrum-Proofs`](https://github.com/Fulcrum-Governance/Fulcrum-Proofs) | Formal core: Lean 4 proofs, claim ledger, theorem inventory | MIT |
+
+Project docs: [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [Changelog](./CHANGELOG.md) · [Code of Conduct](./CODE_OF_CONDUCT.md) · [Citation](./CITATION.cff)
 
 GIL is the open-source enforcement layer. The full kernel adds Lean 4 formal verification for policy invariants, Bayesian trust scoring with Beta distributions, per-tenant cost modelling, multi-agent workflow orchestration, and managed multi-tenant infrastructure.
 
 - Website: [fulcrumlayer.io](https://fulcrumlayer.io)
-- Published: *Formal Trust and Safety Guarantees for Autonomous Multi-Agent
-  Systems* [arXiv link TBD]
+- Companion paper: *Formal Trust and Safety Guarantees for Autonomous Multi-Agent Systems* (preprint forthcoming)
 
 ## License
 
